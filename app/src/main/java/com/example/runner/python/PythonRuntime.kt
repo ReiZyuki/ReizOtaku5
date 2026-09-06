@@ -531,6 +531,26 @@ class PythonRuntime(
             if (root is RunnerTeleBot) {
                 return root.resolveMethod(parts.last())
             }
+            if (root is PyFile) {
+                return when (parts.last()) {
+                    "read" -> object : PyCallable {
+                        override fun call(args: List<Any?>, kwargs: Map<String, Any?>): Any? = root.read()
+                    }
+                    "write" -> object : PyCallable {
+                        override fun call(args: List<Any?>, kwargs: Map<String, Any?>): Any? {
+                            root.write(args.firstOrNull()?.toString() ?: "")
+                            return null
+                        }
+                    }
+                    "close" -> object : PyCallable {
+                        override fun call(args: List<Any?>, kwargs: Map<String, Any?>): Any? {
+                            root.close()
+                            return null
+                        }
+                    }
+                    else -> null
+                }
+            }
             if (root is Map<*, *>) {
                 val member = root[parts.last()]
                 if (member is PyCallable) return member
@@ -622,7 +642,7 @@ class PyResponse(val status_code: Int, val text: String) {
 }
 
 class PyFile(private val file: File, private val mode: String) {
-    fun read(): String = if (file.exists()) file.readText() else ""
+    fun read(): String = if (file.exists()) file.readText().trim() else ""
     fun write(content: String) {
         if (mode.contains("w") || mode.contains("a")) {
             file.parentFile?.mkdirs()

@@ -3,6 +3,7 @@ package com.example.runner.ui
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -70,6 +71,7 @@ fun RunnerMainScreen(
     var showDownloadDialog by remember { mutableStateOf(false) }
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showHelpDialog by remember { mutableStateOf(false) }
 
     // SAF Folder Picker launcher for "Select Folder"
     val folderPickerLauncher = rememberLauncherForActivityResult(
@@ -215,6 +217,9 @@ fun RunnerMainScreen(
                                 mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                             }
 
+                            // Explicitly use software layer to prevent emulator OpenGL Mesa driver from querying missing /dev/dri/renderD* nodes
+                            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+
                             // Real JavaScript bridge connection to Runner-managed Python backend runtime
                             val bridge = RunnerJavaScriptBridge(viewModel.backendClient)
                             addJavascriptInterface(bridge, RunnerJavaScriptBridge.JS_INTERFACE_NAME)
@@ -234,6 +239,10 @@ fun RunnerMainScreen(
                     update = { webView ->
                         // Re-evaluate JS polyfill if needed
                         webView.evaluateJavascript(RunnerJavaScriptBridge.INJECTED_JS_POLYFILL, null)
+                    },
+                    onRelease = { webView ->
+                        webView.stopLoading()
+                        webView.destroy()
                     }
                 )
             }
@@ -429,6 +438,14 @@ fun RunnerMainScreen(
                     },
                     modifier = Modifier.testTag("menu_about")
                 )
+                DropdownMenuItem(
+                    text = { Text("Help") },
+                    onClick = {
+                        showMenu = false
+                        showHelpDialog = true
+                    },
+                    modifier = Modifier.testTag("menu_help")
+                )
             }
         }
     }
@@ -479,6 +496,13 @@ fun RunnerMainScreen(
     if (showAboutDialog) {
         AboutDialog(
             onDismiss = { showAboutDialog = false }
+        )
+    }
+
+    // Help & Documentation Dialog
+    if (showHelpDialog) {
+        HelpDialog(
+            onDismiss = { showHelpDialog = false }
         )
     }
 }

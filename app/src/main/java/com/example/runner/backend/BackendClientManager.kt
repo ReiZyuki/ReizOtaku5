@@ -23,7 +23,8 @@ import java.util.concurrent.ConcurrentHashMap
 class BackendClientManager(private val context: Context) {
 
     private var serviceMessenger: Messenger? = null
-    private val clientMessenger = Messenger(ClientIncomingHandler())
+    private val incomingThread = android.os.HandlerThread("BackendClientIncomingThread").apply { start() }
+    private val clientMessenger = Messenger(ClientIncomingHandler(incomingThread.looper))
     private var isBound = false
 
     private var currentSessionId = UUID.randomUUID().toString()
@@ -160,7 +161,7 @@ class BackendClientManager(private val context: Context) {
         _logs.value = emptyList()
     }
 
-    private inner class ClientIncomingHandler : Handler(Looper.getMainLooper()) {
+    private inner class ClientIncomingHandler(looper: Looper) : Handler(looper) {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
                 PythonBackendService.MSG_BACKEND_LOG -> {
