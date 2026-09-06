@@ -1,0 +1,6 @@
+{
+  "name": "Runner",
+  "description": "Real local project runner that detects, runs, and displays HTML, Python, and TeleBot backends with embedded runtime, multi-process architecture, and interactive terminal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
